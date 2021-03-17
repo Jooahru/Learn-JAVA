@@ -24,8 +24,8 @@
   }
   ```
 
-* VariableTest
-
+  ## VariableTest
+  
   ```java
   package day1;
   
@@ -52,6 +52,6 @@
   
   }
   ```
-
+  
   
 
