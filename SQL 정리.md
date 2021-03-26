@@ -559,7 +559,245 @@ where salary>=20000;
 
 ```
 
-
+### 2021 03 26 
 
 * JOIN-SELECT
+
+  * 예) 사번, 사원명, 부서코드 조회 : employees 테이블
+
+    ​       사번, 사원명, <u>부서명</u> 조회 : employees +<u>departments</u> 테이블
+
+    ```sql
+    ---> inner join (양쪽다 존재하는 정보만 조회)
+    select employee_id, first_name, e.department_id,department_name
+    from employees e, departments d
+    where e.department_id = d.department_id;
+    
+    --->outer join (부족한쪽에 (+) 붙으면 추가해서 출력)
+    select employee_id, first_name, e.department_id,department_name
+    from employees e, departments d
+    where e.department_id = d.department_id(+);
+    ---> employees 부서코드 null인 사람 있음 department null인사람 없음
+    ---> (+) 붙이면 where절 조건만족하는사람없어도 추가해서 출력
+    ```
+
+  * 예) employees 테이블 내사번, 내이름,상사사번,상사이름 (self join + outer join)
+
+    ```sql
+    select me.employee_id, me.first_name, me.manager_id, man.employee_id,
+    man.first_name
+    from employees me, employees man
+    where me.manager_id = man.employee_id(+);
+    ```
+
+  * 예) 내 상사보다 급여를 많이 받는 사원 이름 급여 조회
+
+    ```sql
+    select me.employee_id, me.first_name, me.salary, me.manager_id, 
+    man.first_name, man.salary 
+    from employees me, employees man
+    where me.manager_id = man.employee_id and me.salary>man.salary;
+    ```
+
+    | 표준join - ansi                                              | 오라클join                                                   |
+    | ------------------------------------------------------------ | ------------------------------------------------------------ |
+    | select employee_id, first_name, e.department_id,department_name<br/>from employees e **inner join** departments d <br />**on** e.department_id = d.department_id; | select employee_id, first_name, e.department_id,department_name<br/>from employees e, departments d<br/>where e.department_id = d.department_id; |
+    | select employee_id, first_name, e.department_id,department_name<br/>from employees e **left outer join** departments d<br/>**on** e.department_id = d.department_id; | select employee_id, first_name, e.department_id,department_name<br/>from employees e, departments d<br/>where e.department_id = d.department_id(+); |
+
+  * Union (데이터갯수 늘어남,중복제외) 
+
+  * union all (중복가능)
+
+  * minus (첫번째 조건 만족하는 데이터중에서 두번째 조건 만족하는 데이터 제외)
+
+  * intersect --> 2조건 만족 사원"만" 조회(1회)
+
+
+### 오라클 8장
+
+* DDL -테이블 정의/변경/삭제
+
+  * 테이블정의
+
+    create table 테이블이름(
+
+    컬럼명1 타입(길이) 제약조건,
+
+    컬럼명2 타입(길이) 제약조건,
+
+    .......
+
+    컬럼명N 타입(길이) 제약조건}
+
+    );
+
+     
+
+    alter table  테이블이름 add 컬럼명 10 타입(길이);
+
+    alter table 테이블이름 modify 컬럼명1 ???(???) ????;
+
+    alter table 테이블이름 drop column 컬럼명1;
+
+    drop table 테이블 이름; (복구불가)
+
+  * db 테이블 소유주 = schema = 사용자 = 계정 // 사용자 생성 권한 - system 계정
+
+    ```sql
+    --->계정 만들기
+    conn system/system;
+    -->create user 계정 identified by 암호;
+    create user jdbc identified by jdbc;
+    grant resource, connect to jdbc;
+    ```
+
+  * 테이블/컬럼- 숫자시작불가능, 오라클키워드불가능, 길이제한, _
+
+    | emp테이블                           |          |
+    | ----------------------------------- | -------- |
+    | id 정수 5자리                       | 사번     |
+    | name 문자열 20자리                  | 이름     |
+    | title 문자열 20자리                 | 직급     |
+    | depit_id 정수 5자리                 | 부서코드 |
+    | salary 실수 정수 10자리.소수점2자리 | 급여*    |
+
+    ```sql
+    --->emp 테이블 생성
+    create table emp(
+    id number(5),
+    name varchar2(20),
+    title varchar2(20),
+    dept_id number(5),
+    salary number(12,2));
+    --->emp 테이블에 입사일 커럼 추가
+    alter table emp add indate date;
+    --->emp 테이블에 title 컬럼 길이 20>10자리 변경 (만약 10자리 넘는 데이터 가지고 있으면 실행 X)
+    alter table emp modify title varchar2(10);
+    -->emp 테이블에서 입사일 커럼 삭제
+    alter table emp drop column indate;
+    -->emp 테이블 전체 삭제 (sql 문장 복구 불가)
+    drop table emp;
+    ---> emp_copy 테이블 employees 테이블처럼 11개 컬럼 이름, 타입 그대로 사용
+    create table emp_copy as select * from hr.employees;
+    ```
+
+* DCL
+
+  * grant ,revoke 어떤 권한을 주거나 빼앗을 때 사용
+
+    ```sql
+    grant resource, connect to 사용자;
+    revoke resource ,connect to 사용자;
+    ```
+
+* DML 데이터 저장 -수정 -삭제  (transaction 처리 언어)
+
+* (insert - update- delete 수행후 db 영구저장(commit)/취소(rollback) sql문장)
+
+  * emp 테이블에 데이터 (100, '이사원', '사원', 10, 99000.5) 넣기
+
+    ```sql
+    insert into emp values(100, '이사원', '사원', 10, 99000.5);
+    insert into emp values(200, '김대리', null, null, null);
+    insert into emp(id,name) values(300, '박과장');
+    insert into emp values(400, '최부장', '부장', 20, 99000.5);
+    insert into emp values(500, '박대리', '대리', 20, 99000.5);
+    commit; 
+    insert into emp values(600, '최사장', '임원', null, 100000.5);
+    
+    insert into emp select* from emp employees;
+    -->107개 데이터 입력가능 (단 emp/employees 컬럼갯수,컬럼타입 확인필수)
+    insert into emp(id,name,title,dept_id,salary) select employee_id, first_name, job_id, department_id,salary from hr.employees;
+    --->(id,name,title,dept_id,salary 생략가능)
+    --->grant select on employees to jdbc; 필수 (hr계정에서)
+    
+    update 테이블명 set 변경컬럼명=변경값 where 변경조건식;
+    delete 테이블명 where 삭제조건식;
+    update emp set salary=1000 where salary is null;
+    --> emp 테이블에서 급여 못받는 사람 1000원으로 수정
+    update emp set dept_id = (select dept_id from emp where name = '이사원') where name = '박대리';
+    -->이름이 박대리 사원의 부서를 이사원의 부사로 바꿔라
+    ```
+
+* 자동으로 증가하는 시퀀스
+
+  * 시퀀스 생성
+
+    ```sql
+    create sequence 시퀀스이름;  --->1부터 시작 1씩증가 최대값 오라클설정값
+    start with 숫자 ---> 시작값설정
+    increment by 숫자 --> 증가값설정
+    ```
+
+  * 시퀀스 활용
+
+    ```sql
+    시퀀스명.currval ---> 현재값
+    시퀀스명.nextval ---> 다음값
+    dual
+    insert into emp values(emp_seq.nextval, '이자바','사원',30,45000.55);
+    ```
+
+  * 시퀀스 수정 삭제
+
+    ```sql
+    alter sequence 시퀀스이름 start with 10 --> 10부터 시작
+    alter sequence 시퀀스이름 increment by 10  -->10씩 증가로 변경
+    drop sequence 시퀀스이름 --> 삭제
+    ```
+
+* constraint
+
+  * unique (중복 x)
+
+  * not null (null값 x)
+
+  * primary key (중복 x & null값 x )
+
+  * fk(다른테이블 참조)
+
+  *  check(사용자 조건)
+
+    | c_dept                           | c_emp                                                    |
+    | -------------------------------- | -------------------------------------------------------- |
+    | dept_id<br />dept_name<br />city | emp_id<br />emp_name<br />title<br />salary<br />dept_id |
+
+    ```sql
+    create table c_dept(
+    dept_id number(5) constraint c_dept_id_pk primary key,
+    dept_name varchar2(20) constraint c_dept_name_uk unique,
+    city varchar2(20) constraint c_dept_city_nn not null);
+    
+    create table c_emp(
+    emp_id number(5) constraint c_emp_id_pk primary key,
+    emp_name varchar2(20) constraint c_emp_name_nn not null,
+    title varchar2(10) constraint c_emp_title_ck check(title in('사원','대리','과장','부장','임원')),
+    salary number(12,2) constraint c_emp_salary_ck check(salary>=1000)
+    ,dept_id number(5) constraint c_emp_dept_id_fk references c_dept(dept_id));
+    
+    
+    insert into c_dept values(10, '인재개발부','제주');
+    insert into c_dept values(20, '교육부','서울');
+    insert into c_dept values(30, '전산개발부','대전');
+    
+    insert into c_emp values(100, '김사원', '사원', 1000,10);
+    insert into c_emp values(200, '박대리', '사장', 1000,10);
+    --> 오류 사장은 체크 조건에 걸림
+    insert into c_emp values(300, '안대리', '대리', 1999,20);
+    insert into c_emp values(400, '박과장', '과장', 3000,30);
+    insert into c_emp values(500, '박부장', '부장', 5000,10);
+    
+    update c_emp set dept_id=20 where dept_id =10;
+    delete c_dept where dept_id=10;
+    
+    drop table c_dept;
+    ---> 실행오류(c_emp 테이블이 참조중(자식 테이블 c_emp))
+    drop table c_dept cascade constraints; 
+    ---> 제약조건 다 풀고 삭제 
+    
+    alter table c_emp rename 이전컬럼명 to 새컬럼명
+    rename 이전테이블명 to 새로운테이블명
+    ```
+
+    
 
