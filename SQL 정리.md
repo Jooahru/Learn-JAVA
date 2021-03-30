@@ -797,7 +797,83 @@ where salary>=20000;
     
     alter table c_emp rename 이전컬럼명 to 새컬럼명
     rename 이전테이블명 to 새로운테이블명
-    ```
-
     
+select * from user_constraints;
+    desc user_constraints;
+    --->데이터 생성 제약조건 확인시
+    
+    select constraint_name, constraint_type, search_condition,table_name
+    from us
+    er_constraints
+    where table_name='C_EMP';
+    ```
+    
+
+### 2021 03 29
+
+* Java와 오라클 연동
+
+    1.
+
+  2. sql 전송 -sql 저장 전송 결과 저장
+
+     ```java
+     Statement st = con.createStatement();
+     int cnt = st.executeUpdate("insert....sql")
+     ```
+
+   3.sql 결과 검색
+
+  ```java
+  system.out.println(cnt);
+  ```
+
+   4.db 연결해제
+
+  ```java
+  con.close()
+  ```
+
+  
+
+* DML
+
+  ```
+  statement st = con.createstatement
+  int 변경행  = st.executeUpdate("insert|")
+  ```
+
+* DQL
+
+  ```java
+  statement st = con.createstatement();
+  ResultSet rs = st.executeQuery("select id, name, salary,from emp");
+  ```
+
+  rs 여러개행 여러개열
+
+  | id(정수) | name(문자) | salary(실수) |
+  | -------- | ---------- | ------------ |
+  | 100      | 이자바     | 5000.8       |
+  | ...      | ...        | ...          |
+
+  ```java
+  * while(rs.next()){
+      
+      rs.getInt(1); == rs.getInt("id")
+      rs.getString(2); == rs.getString("name")
+      rs.getDouble(3); == rs.getDouble("salary")
+  
+    } - true/false
+  
+  ```
+
+  
+
+| 정수: rs.getInt()    | int           | number(n) = int                                     |
+| -------------------- | ------------- | --------------------------------------------------- |
+| 실수: rs.getDouble() | double        | number(n,s) = float                                 |
+| 문자: rs.getString() | string        | char,varchar2(n)                                    |
+| 날짜                 | java.sql.Date | date                                                |
+| rs.getString()       | String        | to_char(sysdate, 'yyyy-mm-dd')<br />==> 문자형 결과 |
 
